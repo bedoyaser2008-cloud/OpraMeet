@@ -92,7 +92,7 @@ export function PusherPing() {
       title={`Live latency to Pusher cluster: ${cluster.toUpperCase()}`}
     >
       <div className={`w-1.5 h-1.5 rounded-full ${dotColorClass} animate-pulse`} />
-      <span className="hidden sm:inline text-[10px] text-text-tertiary select-none">Pusher ({cluster})</span>
+      <span className="hidden sm:inline text-[10px] text-text-tertiary select-none">Video Server ({cluster})</span>
       <span className="hidden sm:inline w-[1px] h-3 bg-white/10" />
       <span className={`${textColorClass} min-w-[32px] text-right`}>{pingText}</span>
     </div>
