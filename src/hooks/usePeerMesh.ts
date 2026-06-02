@@ -165,6 +165,7 @@ export function usePeerMesh(
       return;
     }
 
+    pusher.config.auth = pusher.config.auth || {};
     pusher.config.auth.params = {
       user_id: userId,
       user_name: displayName,

@@ -118,6 +118,7 @@ function RoomGateContent({
     }
 
     // Set configuration variables for Pusher subscription auth
+    pusher.config.auth = pusher.config.auth || {};
     pusher.config.auth.params = {
       user_id: activeUserId,
       user_name: displayName,
