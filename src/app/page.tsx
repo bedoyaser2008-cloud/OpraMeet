@@ -8,6 +8,7 @@ import { JoinMeetingInput } from "@/components/home/JoinMeetingInput";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import BannerImage from "@/assests/OpraMeet-banner.png";
+import { PusherPing } from "@/components/home/PusherPing";
 
 /**
  * OpraMeet Homepage using the Dark Cinema aesthetic.
@@ -38,9 +39,10 @@ function HomeContent() {
       </div>
 
       {/* Header / Logo */}
-      <header className="px-6 py-1 flex items-center justify-between border-b border-white/5 relative z-tiles bg-bg-app/40 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-default">
+      <header className="px-6 py-1 flex items-center border-b border-white/5 relative z-tiles bg-bg-app/40 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-3 items-center">
+          {/* Left: Logo */}
+          <div className="flex items-center cursor-default justify-start">
             <Image
               src={BannerImage}
               alt="OpraMeet Logo"
@@ -48,9 +50,17 @@ function HomeContent() {
               className="w-auto h-16 md:h-[72px] object-contain"
               priority
             />
-            <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           </div>
-          <span className="text-[10px] font-mono text-text-tertiary">v1.0.0</span>
+
+          {/* Center: Live Pusher latency status */}
+          <div className="flex justify-center">
+            <PusherPing />
+          </div>
+
+          {/* Right: Version */}
+          <div className="flex justify-end">
+            <span className="text-[10px] font-mono text-text-tertiary">v1.0.0</span>
+          </div>
         </div>
       </header>
 
