@@ -1,0 +1,44 @@
+{
+  "name": "oprameet",
+  "author": "github.com/aryanshrai03",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@mediapipe/selfie_segmentation": "^0.1.1675465747",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@tensorflow-models/body-segmentation": "^1.0.2",
+    "@tensorflow/tfjs-backend-webgl": "^4.22.0",
+    "@tensorflow/tfjs-converter": "^4.22.0",
+    "@tensorflow/tfjs-core": "^4.22.0",
+    "@types/simple-peer": "^9.11.9",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.40.0",
+    "googleapis": "^173.0.0",
+    "lucide-react": "^1.17.0",
+    "next": "16.2.7",
+    "pusher": "^5.3.3",
+    "pusher-js": "^8.5.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-hot-toast": "^2.6.0",
+    "simple-peer": "^9.11.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.7",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
