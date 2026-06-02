@@ -96,49 +96,68 @@ export async function POST(request: Request) {
 
     let isAuthorized = false;
     let isHost = false;
+    let authReason = "default_unauthorized";
+
+    console.log(`[PusherAuth] Authorizing user: ${userId} for channel: ${channelName}, room: ${roomId}`);
+    console.log(`[PusherAuth] room.isPrivate: ${room.isPrivate}, room.waitingRoom: ${room.waitingRoom}, isWaiting: ${isWaiting}`);
+    console.log(`[PusherAuth] token received: ${token ? (token.substring(0, 15) + "...") : "falsy"}`);
 
     // 1. Verify if user is the host using the secret host token
     if (token === room.hostId) {
       isAuthorized = true;
       isHost = true;
       isWaiting = false; // Host never waits
+      authReason = "authorized_as_host";
     }
     // 2. Verify if user is requesting to join in "waiting" mode
     else if (isWaiting) {
       // Waiting room is only permitted if it is enabled for this room
       if (room.waitingRoom) {
         isAuthorized = true;
+        authReason = "authorized_as_waiting_guest";
+      } else {
+        authReason = "rejected_waiting_guest_waiting_room_disabled";
       }
     }
     // 3. Verify if user is joining normally (isWaiting: false)
     else {
-      // If room is private, they must present a valid signed peerToken
-      if (room.isPrivate) {
-        if (token) {
+      // If room is private OR waiting room is enabled, they must present a valid signed peerToken
+      if (room.isPrivate || room.waitingRoom) {
+        if (token && token !== "undefined" && token !== "null") {
           try {
             const decoded = decryptPayload<{ roomId: string; role: string; expiresAt: number }>(token);
-            if (
-              decoded &&
-              decoded.roomId === roomId &&
-              decoded.role === "peer" &&
-              decoded.expiresAt > Date.now()
-            ) {
+            if (!decoded) {
+              authReason = "rejected_token_decryption_returned_null";
+            } else if (decoded.roomId !== roomId) {
+              authReason = `rejected_token_room_id_mismatch_decoded_${decoded.roomId}_vs_channel_${roomId}`;
+            } else if (decoded.role !== "peer") {
+              authReason = `rejected_token_role_mismatch_decoded_${decoded.role}`;
+            } else if (decoded.expiresAt <= Date.now()) {
+              authReason = `rejected_token_expired_decoded_${decoded.expiresAt}_vs_now_${Date.now()}`;
+            } else {
               isAuthorized = true;
+              authReason = "authorized_normally_with_valid_token";
             }
-          } catch (decryptErr) {
-            console.error("Invalid peer token decryption:", decryptErr);
+          } catch (decryptErr: any) {
+            console.error("[PusherAuth] Invalid peer token decryption error:", decryptErr);
+            authReason = `rejected_token_decryption_threw_error_${decryptErr.message}`;
           }
+        } else {
+          authReason = `rejected_token_missing_for_private_or_waiting_room_token_value_${token}`;
         }
       }
       // If room is public and has no waiting room, they are free to join
       else {
         isAuthorized = true;
+        authReason = "authorized_normally_public_room_no_waiting";
       }
     }
 
+    console.log(`[PusherAuth] Authorization result: ${isAuthorized}, reason: ${authReason}`);
+
     if (!isAuthorized) {
       return NextResponse.json(
-        { error: "Unauthorized access to signaling channel" },
+        { error: "Unauthorized access to signaling channel", reason: authReason },
         { status: 403 }
       );
     }
