@@ -40,7 +40,7 @@ function HomeContent() {
 
       {/* Header / Logo */}
       <header className="px-6 py-1 flex items-center border-b border-white/5 relative z-tiles bg-bg-app/40 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-3 items-center">
+        <div className="max-w-7xl mx-auto w-full grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-4">
           {/* Left: Logo */}
           <div className="flex items-center cursor-default justify-start">
             <Image

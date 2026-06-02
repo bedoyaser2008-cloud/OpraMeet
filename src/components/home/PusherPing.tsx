@@ -129,8 +129,8 @@ export function PusherPing() {
         title={`Live latency to Pusher cluster: ${cluster.toUpperCase()}`}
       >
         <div className={`w-1.5 h-1.5 rounded-full ${videoStyles.dotColorClass} animate-pulse`} />
-        <span className="hidden sm:inline text-[9px] text-text-tertiary select-none">Video Server ({cluster})</span>
-        <span className="hidden sm:inline w-[1px] h-2.5 bg-white/10" />
+        <span className="text-[9px] text-text-tertiary select-none">Video Server ({cluster})</span>
+        <span className="w-[1px] h-2.5 bg-white/10" />
         <span className={`${videoStyles.textColorClass} min-w-[32px] text-right`}>{videoStyles.pingText}</span>
       </div>
 
@@ -140,8 +140,8 @@ export function PusherPing() {
         title="Live latency to App Backend Server"
       >
         <div className={`w-1.5 h-1.5 rounded-full ${appStyles.dotColorClass} animate-pulse`} />
-        <span className="hidden sm:inline text-[9px] text-text-tertiary select-none">Backend Server (API)</span>
-        <span className="hidden sm:inline w-[1px] h-2.5 bg-white/10" />
+        <span className="text-[9px] text-text-tertiary select-none">Backend Server (API)</span>
+        <span className="w-[1px] h-2.5 bg-white/10" />
         <span className={`${appStyles.textColorClass} min-w-[32px] text-right`}>{appStyles.pingText}</span>
       </div>
     </div>
