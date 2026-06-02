@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import { CreateMeetingCard } from "@/components/home/CreateMeetingCard";
 import { JoinMeetingInput } from "@/components/home/JoinMeetingInput";
 import toast from "react-hot-toast";
+import Image from "next/image";
+import BannerImage from "@/assests/OpraMeet-banner.png";
 
 /**
  * OpraMeet Homepage using the Dark Cinema aesthetic.
@@ -39,9 +41,13 @@ function HomeContent() {
       <header className="px-6 py-6 flex items-center justify-between border-b border-white/5 relative z-tiles bg-bg-app/40 backdrop-blur-md">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-default">
-            <span className="text-xl font-bold tracking-tight text-text-primary">
-              Opra<span className="text-accent-primary">Meet</span>
-            </span>
+            <Image
+              src={BannerImage}
+              alt="OpraMeet Logo"
+              height={72}
+              className="w-auto h-16 md:h-[72px] object-contain"
+              priority
+            />
             <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
           </div>
           <span className="text-[10px] font-mono text-text-tertiary">v1.0.0</span>
