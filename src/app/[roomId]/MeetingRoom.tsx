@@ -42,6 +42,7 @@ interface MeetingRoomProps {
   userId: string;
   displayName: string;
   isHost: boolean;
+  hostSecret: string | null;
   localMedia: ReturnType<typeof useLocalMedia>;
   initialBgMode: "none" | "blur-light" | "blur-heavy" | "image";
   initialBgImage: string;
@@ -61,6 +62,7 @@ export function MeetingRoom({
   userId,
   displayName,
   isHost: initialIsHost,
+  hostSecret,
   localMedia,
   initialBgMode,
   initialBgImage,
@@ -96,6 +98,11 @@ export function MeetingRoom({
   // 2. Setup Ref to resolve circular dependency between usePeerMesh and useDataChannel
   const dataHandlerRef = useRef<(senderId: string, data: string) => void>(() => {});
 
+  // Retrieve secret token from localStorage/sessionStorage to authorize Pusher subscription
+  const hostSecretOrToken = typeof window !== "undefined"
+    ? (isHost ? hostSecret : sessionStorage.getItem(`peer_token_${roomId}`))
+    : null;
+
   // 3. Instantiate WebRTC signalling presence mesh hook
   const { peers, remoteStreams, myPeerId, channel, waitingUsers, admitUser, declineUser } = usePeerMesh(
     roomId,
@@ -103,6 +110,7 @@ export function MeetingRoom({
     displayName,
     userId,
     isHost,
+    hostSecretOrToken,
     useCallback((senderId: string, data: string) => {
       dataHandlerRef.current(senderId, data);
     }, [])
@@ -123,16 +131,22 @@ export function MeetingRoom({
     };
   }, [dataChannel]);
 
+  // Helper callback to securely verify if a message sender is the authenticated host in Pusher presence metadata
+  const isSenderHost = useCallback((senderId: string) => {
+    const member = channel?.members?.get(senderId);
+    return member?.info?.isHost === true;
+  }, [channel]);
+
   // 5. Instantiate other functional hooks
   const localAudioMeter = useAudioMeter(localMedia.localStream);
   const screenShare = useScreenShare(localMedia.localStream, localMedia.setLocalStream, originalCameraTrackRef.current);
   const background = useBackground(localMedia.localStream, localMedia.setLocalStream, originalCameraTrackRef.current);
-  const breakout = useBreakoutRooms(roomId, peers, dataChannel);
-  const polls = usePolls(dataChannel);
+  const breakout = useBreakoutRooms(roomId, peers, dataChannel, isSenderHost);
+  const polls = usePolls(dataChannel, isSenderHost);
   const handRaise = useHandRaise(dataChannel, displayName);
   const captions = useCaptions(dataChannel, displayName);
   const recording = useRecording(localMedia.localStream, dataChannel);
-  const hostControls = useHostControls(roomId, userId, isHost, dataChannel, channel);
+  const hostControls = useHostControls(roomId, userId, isHost, hostSecret, dataChannel, channel);
 
   // Initialize background state from Lobby Gate selection
   useEffect(() => {
@@ -302,7 +316,8 @@ export function MeetingRoom({
   useEffect(() => {
     if (!dataChannel) return;
 
-    const unbindKick = dataChannel.onMessage("host-kick", (payload: { targetPeerId: string }) => {
+    const unbindKick = dataChannel.onMessage("host-kick", (payload: { targetPeerId: string }, senderId: string) => {
+      if (!isSenderHost(senderId)) return;
       if (payload.targetPeerId === userId) {
         toast.error("You have been removed from the meeting by the host");
         setTimeout(() => {
@@ -311,39 +326,45 @@ export function MeetingRoom({
       }
     });
 
-    const unbindEnd = dataChannel.onMessage("host-end", () => {
+    const unbindEnd = dataChannel.onMessage("host-end", (payload: any, senderId: string) => {
+      if (!isSenderHost(senderId)) return;
       toast.error("This meeting has been closed by the host");
       setTimeout(() => {
         window.location.href = "/";
       }, 1500);
     });
 
-    const unbindMute = dataChannel.onMessage("host-mute", (payload: { targetPeerId: string }) => {
+    const unbindMute = dataChannel.onMessage("host-mute", (payload: { targetPeerId: string }, senderId: string) => {
+      if (!isSenderHost(senderId)) return;
       if (payload.targetPeerId === userId && localMedia.isMicOn) {
         localMedia.toggleMic();
         toast("You have been muted by the host", { icon: "🎙️" });
       }
     });
 
-    const unbindMuteAll = dataChannel.onMessage("host-mute-all", () => {
+    const unbindMuteAll = dataChannel.onMessage("host-mute-all", (payload: any, senderId: string) => {
+      if (!isSenderHost(senderId)) return;
       if (localMedia.isMicOn && !isHost) {
         localMedia.toggleMic();
         toast("All participants have been muted by the host", { icon: "🎙️" });
       }
     });
 
-    const unbindDisableCam = dataChannel.onMessage("host-disable-cam", (payload: { targetPeerId: string }) => {
+    const unbindDisableCam = dataChannel.onMessage("host-disable-cam", (payload: { targetPeerId: string }, senderId: string) => {
+      if (!isSenderHost(senderId)) return;
       if (payload.targetPeerId === userId && localMedia.isCameraOn) {
         localMedia.toggleCamera();
         toast("Your camera was disabled by the host", { icon: "📷" });
       }
     });
 
-    const unbindLock = dataChannel.onMessage("host-lock", (payload: { isLocked: boolean }) => {
+    const unbindLock = dataChannel.onMessage("host-lock", (payload: { isLocked: boolean }, senderId: string) => {
+      if (!isSenderHost(senderId)) return;
       toast(payload.isLocked ? "The meeting has been locked" : "The meeting has been unlocked", { icon: "🔒" });
     });
 
-    const unbindTransfer = dataChannel.onMessage("host-transfer", (payload: { newHostId: string }) => {
+    const unbindTransfer = dataChannel.onMessage("host-transfer", (payload: { newHostId: string }, senderId: string) => {
+      if (!isSenderHost(senderId)) return;
       if (payload.newHostId === userId) {
         setIsHost(true);
         toast.success("You are now the host of this meeting!");
@@ -361,7 +382,7 @@ export function MeetingRoom({
       unbindLock();
       unbindTransfer();
     };
-  }, [dataChannel, userId, localMedia, isHost]);
+  }, [dataChannel, userId, localMedia, isHost, isSenderHost]);
 
   // 10. Reactions Visual Burst
   const handleSendReaction = useCallback((emoji: string) => {

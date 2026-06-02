@@ -70,6 +70,9 @@ export function PinEntry({ roomId, onSuccess }: PinEntryProps) {
       const result = await res.json();
 
       if (res.ok && result.granted) {
+        if (result.peerToken) {
+          sessionStorage.setItem(`peer_token_${roomId}`, result.peerToken);
+        }
         toast.success("Passcode verified");
         onSuccess(passcodeHash);
       } else {

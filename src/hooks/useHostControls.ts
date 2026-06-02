@@ -17,6 +17,7 @@ export function useHostControls(
   roomId: string,
   myPeerId: string,
   isHost: boolean,
+  hostSecret: string | null,
   dataChannel: any,
   pusherChannel: any
 ) {
@@ -61,7 +62,7 @@ export function useHostControls(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           roomId,
-          hostId: myPeerId,
+          hostId: hostSecret,
           channel: pusherChannel?.name,
           event: "client-host-kick",
           data: { targetPeerId: peerId },
@@ -76,7 +77,7 @@ export function useHostControls(
     } catch (e) {
       toast.error("Network error during participant ejection");
     }
-  }, [roomId, myPeerId, pusherChannel]);
+  }, [roomId, hostSecret, pusherChannel]);
 
   const lockRoom = useCallback(async () => {
     setIsLocked(true);
@@ -96,7 +97,7 @@ export function useHostControls(
       const res = await fetch("/api/room/end", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId, hostId: myPeerId }),
+        body: JSON.stringify({ roomId, hostId: hostSecret }),
       });
       
       if (res.ok) {
@@ -112,7 +113,7 @@ export function useHostControls(
     } catch (e) {
       toast.error("Network error terminating meeting");
     }
-  }, [roomId, myPeerId, dataChannel]);
+  }, [roomId, hostSecret, dataChannel]);
 
   const transferHost = useCallback((peerId: string) => {
     dataChannel?.sendMessage("host-transfer", { newHostId: peerId });

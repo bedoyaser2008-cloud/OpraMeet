@@ -10,17 +10,18 @@ import { WaitingRoom } from "@/components/meeting/WaitingRoom";
 import { MeetingRoom } from "./MeetingRoom";
 import { getPusherClient } from "@/websocket/client";
 import { buildRoomChannel } from "@/websocket/config";
+import { hashPasscode } from "@/lib/crypto-client";
 
 interface RoomGateProps {
   roomId: string;
   isPrivate: boolean;
   waitingRoom: boolean;
-  dbHostId: string;
+  dbHostIdHash: string;
 }
 
 type GatePhase = "VERIFYING_PIN" | "LOBBY_PREVIEW" | "WAITING_ROOM" | "MEETING_ROOM";
 
-export function RoomGate({ roomId, isPrivate, waitingRoom, dbHostId }: RoomGateProps) {
+export function RoomGate({ roomId, isPrivate, waitingRoom, dbHostIdHash }: RoomGateProps) {
   const router = useRouter();
 
   // 1. PIN verification check state
@@ -40,7 +41,7 @@ export function RoomGate({ roomId, isPrivate, waitingRoom, dbHostId }: RoomGateP
     <RoomGateContent
       roomId={roomId}
       waitingRoom={waitingRoom}
-      dbHostId={dbHostId}
+      dbHostIdHash={dbHostIdHash}
       onReturnHome={() => router.push("/")}
     />
   );
@@ -49,7 +50,7 @@ export function RoomGate({ roomId, isPrivate, waitingRoom, dbHostId }: RoomGateP
 function RoomGateContent({
   roomId,
   waitingRoom,
-  dbHostId,
+  dbHostIdHash,
   onReturnHome,
 }: Omit<RoomGateProps, "isPrivate"> & { onReturnHome: () => void }) {
   const [phase, setPhase] = useState<GatePhase>("LOBBY_PREVIEW");
@@ -72,9 +73,25 @@ function RoomGateContent({
     return "";
   });
 
-  // Verify host ownership by checking local storage host token
-  const isHost = typeof window !== "undefined" && localStorage.getItem(`host_${roomId}`) === dbHostId;
-  const activeUserId = isHost ? dbHostId : userId;
+  const [isHost, setIsHost] = useState(false);
+  const [hostSecret, setHostSecret] = useState<string | null>(null);
+
+  // Verify host ownership securely using the hash comparison
+  useEffect(() => {
+    const checkHost = async () => {
+      const stored = localStorage.getItem(`host_${roomId}`);
+      if (stored) {
+        setHostSecret(stored);
+        const hash = await hashPasscode(stored);
+        if (hash === dbHostIdHash) {
+          setIsHost(true);
+        }
+      }
+    };
+    checkHost();
+  }, [roomId, dbHostIdHash]);
+
+  const activeUserId = userId;
 
   // Initialize media checks
   const localMedia = useLocalMedia();
@@ -105,14 +122,18 @@ function RoomGateContent({
       user_id: activeUserId,
       user_name: displayName,
       is_waiting: "true",
+      token: hostSecret || undefined, // Host uses secret, guest uses undefined when waiting
     };
 
     const channelName = buildRoomChannel(roomId);
     const channel = pusher.subscribe(channelName);
 
     // Host admission response handler
-    channel.bind("client-admit", (data: { targetPeerId: string }) => {
+    channel.bind("client-admit", (data: { targetPeerId: string, peerToken?: string }) => {
       if (data.targetPeerId === activeUserId) {
+        if (data.peerToken) {
+          sessionStorage.setItem(`peer_token_${roomId}`, data.peerToken);
+        }
         toast.success("You have been admitted to the meeting");
         setPhase("MEETING_ROOM");
       }
@@ -197,6 +218,7 @@ function RoomGateContent({
       userId={activeUserId}
       displayName={displayName}
       isHost={isHost}
+      hostSecret={hostSecret}
       localMedia={localMedia}
       initialBgMode={bgMode}
       initialBgImage={bgImage}

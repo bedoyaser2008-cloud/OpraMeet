@@ -2,6 +2,7 @@ import { fetchRoom } from "@/database/repository";
 import { RoomGate } from "./RoomGate";
 import Link from "next/link";
 import { VideoOff, AlertTriangle } from "lucide-react";
+import crypto from "crypto";
 
 export const revalidate = 0; // Disable Next.js caching for dynamic room validation
 
@@ -61,13 +62,16 @@ export default async function RoomPage({ params }: RoomPageProps) {
     );
   }
 
+  // Generate host secret hash to pass securely (non-reversible)
+  const dbHostIdHash = crypto.createHash("sha256").update(room.hostId).digest("hex");
+
   // 3. Room valid: load entry gate client wrapper
   return (
     <RoomGate
       roomId={room.roomId}
       isPrivate={room.isPrivate}
       waitingRoom={room.waitingRoom}
-      dbHostId={room.hostId}
+      dbHostIdHash={dbHostIdHash}
     />
   );
 }

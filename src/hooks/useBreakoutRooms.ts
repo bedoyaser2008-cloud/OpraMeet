@@ -15,7 +15,8 @@ export interface BreakoutRoom {
 export function useBreakoutRooms(
   roomId: string,
   peers: any[],
-  dataChannel: any
+  dataChannel: any,
+  isSenderHost?: (senderId: string) => boolean
 ) {
   const [rooms, setRooms] = useState<BreakoutRoom[]>([]);
   const [activeBreakoutId, setActiveBreakoutId] = useState<string | null>(null);
@@ -96,7 +97,8 @@ export function useBreakoutRooms(
   useEffect(() => {
     if (!dataChannel) return;
 
-    const unbindConfig = dataChannel.onMessage("breakout-config", (payload: any) => {
+    const unbindConfig = dataChannel.onMessage("breakout-config", (payload: any, senderId: string) => {
+      if (isSenderHost && !isSenderHost(senderId)) return;
       setRooms(payload.rooms);
       
       const myId = dataChannel.myPeerId || peers[0]?.peerId; // Fallback helper
@@ -109,7 +111,8 @@ export function useBreakoutRooms(
       }
     });
 
-    const unbindClose = dataChannel.onMessage("breakout-close", (payload: any) => {
+    const unbindClose = dataChannel.onMessage("breakout-close", (payload: any, senderId: string) => {
+      if (isSenderHost && !isSenderHost(senderId)) return;
       const { countdownSecs } = payload;
       toast(`Closing breakout rooms in ${countdownSecs}s. Returning to main session...`, { icon: "⏳" });
       
@@ -119,7 +122,8 @@ export function useBreakoutRooms(
       }, countdownSecs * 1000);
     });
 
-    const unbindBroadcast = dataChannel.onMessage("breakout-broadcast", (payload: any) => {
+    const unbindBroadcast = dataChannel.onMessage("breakout-broadcast", (payload: any, senderId: string) => {
+      if (isSenderHost && !isSenderHost(senderId)) return;
       toast(`[Broadcast] ${payload.message}`, { duration: 6000, icon: "📢" });
     });
 

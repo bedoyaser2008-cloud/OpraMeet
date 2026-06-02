@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchRoom } from "@/database/repository";
+import { encryptPayload } from "@/database/crypto";
 
 // Simple in-memory rate limiter for login passcode checks
 const rateLimiter = new Map<string, { count: number; resetAt: number }>();
@@ -76,7 +77,14 @@ export async function POST(request: Request) {
     if (room.passcodeHash === passcodeHash) {
       // Clear rate limit on successful check
       rateLimiter.delete(ip);
-      return NextResponse.json({ granted: true });
+      
+      const peerToken = encryptPayload({
+        roomId,
+        role: "peer",
+        expiresAt: Date.now() + 12 * 60 * 60 * 1000, // 12 hours expiry
+      });
+
+      return NextResponse.json({ granted: true, peerToken });
     }
 
     // Incorrect passcode: increment count

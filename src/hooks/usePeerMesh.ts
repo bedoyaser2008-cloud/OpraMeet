@@ -29,6 +29,7 @@ export function usePeerMesh(
   displayName: string,
   userId: string,
   isHost: boolean,
+  hostSecretOrToken: string | null,
   onDataReceived?: (senderId: string, data: string) => void
 ) {
   const [peers, setPeers] = useState<PeerConnection[]>([]);
@@ -167,6 +168,7 @@ export function usePeerMesh(
     pusher.config.auth.params = {
       user_id: userId,
       user_name: displayName,
+      token: hostSecretOrToken || undefined,
     };
 
     const channelName = buildRoomChannel(roomId);
@@ -292,7 +294,7 @@ export function usePeerMesh(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           roomId,
-          hostId: userId,
+          hostId: hostSecretOrToken,
           channel: channelRef.current?.name,
           event: "client-admit",
           data: { targetPeerId: targetUserId },
@@ -318,7 +320,7 @@ export function usePeerMesh(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           roomId,
-          hostId: userId,
+          hostId: hostSecretOrToken,
           channel: channelRef.current?.name,
           event: "client-decline",
           data: { targetPeerId: targetUserId },

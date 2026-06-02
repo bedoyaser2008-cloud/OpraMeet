@@ -21,7 +21,7 @@ export interface Poll {
 /**
  * Hook to manage real-time poll creation, voting, closures, and reports extraction.
  */
-export function usePolls(dataChannel: any) {
+export function usePolls(dataChannel: any, isSenderHost?: (senderId: string) => boolean) {
   const [polls, setPolls] = useState<Poll[]>([]);
 
   // Launch a new poll
@@ -126,7 +126,8 @@ export function usePolls(dataChannel: any) {
   useEffect(() => {
     if (!dataChannel) return;
 
-    const unbindCreate = dataChannel.onMessage("poll-create", (payload: any) => {
+    const unbindCreate = dataChannel.onMessage("poll-create", (payload: any, senderId: string) => {
+      if (isSenderHost && !isSenderHost(senderId)) return;
       setPolls(prev => [payload.poll, ...prev]);
       toast("New poll launched!", { icon: "📊" });
     });
@@ -150,13 +151,15 @@ export function usePolls(dataChannel: any) {
       );
     });
 
-    const unbindClose = dataChannel.onMessage("poll-close", (payload: any) => {
+    const unbindClose = dataChannel.onMessage("poll-close", (payload: any, senderId: string) => {
+      if (isSenderHost && !isSenderHost(senderId)) return;
       const { pollId } = payload;
       setPolls(prev => prev.map(p => (p.id === pollId ? { ...p, isClosed: true } : p)));
       toast("The active poll has been closed.");
     });
 
-    const unbindToggle = dataChannel.onMessage("poll-toggle-results", (payload: any) => {
+    const unbindToggle = dataChannel.onMessage("poll-toggle-results", (payload: any, senderId: string) => {
+      if (isSenderHost && !isSenderHost(senderId)) return;
       const { pollId, showResults } = payload;
       setPolls(prev => prev.map(p => (p.id === pollId ? { ...p, showResults } : p)));
     });

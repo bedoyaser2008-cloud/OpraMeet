@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { pusherServer } from "@/websocket/config";
 import { fetchRoom } from "@/database/repository";
+import { encryptPayload } from "@/database/crypto";
 
 /**
  * POST /api/pusher/trigger
@@ -36,8 +37,18 @@ export async function POST(request: Request) {
       );
     }
 
+    let eventData = data;
+    if (event === "client-admit" && data && data.targetPeerId) {
+      const peerToken = encryptPayload({
+        roomId,
+        role: "peer",
+        expiresAt: Date.now() + 12 * 60 * 60 * 1000, // 12 hours expiry
+      });
+      eventData = { ...data, peerToken };
+    }
+
     // Trigger Pusher event on target channel
-    await pusherServer.trigger(channel, event, data);
+    await pusherServer.trigger(channel, event, eventData);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

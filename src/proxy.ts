@@ -2,36 +2,40 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ROOM_ID_REGEX } from "./lib/roomId";
 
+/**
+ * Proxy middleware routing interception for Next.js 16.
+ * Enforces valid meeting room code formatting and injects essential security headers.
+ */
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Pass through root path
-  if (pathname === "/") {
-    return NextResponse.next();
-  }
+  // Check if pathname format matches a valid room ID (e.g., /abc-abcd-abc)
+  const cleanPath = pathname.substring(1);
+  const isValidRoom = ROOM_ID_REGEX.test(cleanPath);
 
-  // Pass through api routes, next static, images, favicon, public assets
-  if (
+  const isAsset =
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/favicon.ico") ||
-    pathname.includes(".")
-  ) {
-    return NextResponse.next();
+    pathname.includes(".");
+
+  if (pathname !== "/" && !isAsset && !isValidRoom) {
+    // Redirect invalid room IDs to home page with query param error
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    url.searchParams.set("error", "invalid-room");
+    return NextResponse.redirect(url);
   }
 
-  // Check if pathname format matches a valid room ID (e.g., /abc-abcd-abc)
-  // The clean path removes the leading slash
-  const cleanPath = pathname.substring(1);
-  if (ROOM_ID_REGEX.test(cleanPath)) {
-    return NextResponse.next();
-  }
+  const response = NextResponse.next();
 
-  // Redirect invalid room IDs to home page with query param error
-  const url = request.nextUrl.clone();
-  url.pathname = "/";
-  url.searchParams.set("error", "invalid-room");
-  return NextResponse.redirect(url);
+  // Inject essential security headers
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+
+  return response;
 }
 
 export const config = {

@@ -1,7 +1,21 @@
 import crypto from "crypto";
 
 const ALGORITHM = "aes-256-gcm";
-const SECRET = process.env.DATABASE_ENCRYPTION_SECRET || "default-secret-at-least-32-chars-long";
+const FALLBACK_SECRET = "default-secret-at-least-32-chars-long";
+
+/**
+ * Returns the encryption secret key, enforcing its presence in production environments at runtime.
+ */
+function getSecretKey(): string {
+  const secret = process.env.DATABASE_ENCRYPTION_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("CRITICAL SECURITY ERROR: DATABASE_ENCRYPTION_SECRET environment variable is not configured in production!");
+    }
+    return FALLBACK_SECRET;
+  }
+  return secret;
+}
 
 /**
  * Encrypts a JSON-serializable payload using AES-256-GCM and PBKDF2 key derivation.
@@ -15,8 +29,8 @@ export function encryptPayload(data: any): string {
   // Random iterations between 10000 and 99000
   const iterations = Math.floor(Math.random() * (99000 - 10000 + 1)) + 10000;
   
-  // Derive key from the SECRET and the random salt
-  const key = crypto.pbkdf2Sync(SECRET, salt, iterations, 32, "sha256");
+  // Derive key from the secret key and the random salt
+  const key = crypto.pbkdf2Sync(getSecretKey(), salt, iterations, 32, "sha256");
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
   
   let ciphertext = cipher.update(payloadStr, "utf8", "hex");
@@ -55,7 +69,7 @@ export function decryptPayload<T>(encryptedString: string): T {
     throw new Error("Invalid iterations count in encrypted string");
   }
   
-  const key = crypto.pbkdf2Sync(SECRET, salt, iterations, 32, "sha256");
+  const key = crypto.pbkdf2Sync(getSecretKey(), salt, iterations, 32, "sha256");
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(authTag);
   
