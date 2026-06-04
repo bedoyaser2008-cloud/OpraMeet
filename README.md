@@ -461,7 +461,6 @@ OpraMeet is released under the **MIT License**. See [LICENSE](./LICENSE) for det
 ## 📚 Documentation
 
 - [Implementation Plan](./implementation-plan.md) — Detailed development guide
-- [Master Prompt](./src/master_prompt.md) — AI agent instructions
 - [Design System](./implementation-plan.md#-design-system--dark-cinema-aesthetic) — Tokens and components
 
 ---
