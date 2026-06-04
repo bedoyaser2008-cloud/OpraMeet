@@ -452,7 +452,6 @@ OpraMeet is released under the **MIT License**. See [LICENSE](./LICENSE) for det
 
 ## 🙋 Support & Community
 
-- 📧 **Email**: aryansh@oprameet.dev
 - 💬 **Discord**: Join our community server (coming soon)
 - 🐛 **Issues**: Report bugs on [GitHub Issues](https://github.com/aryanshrai03/OpraMeet/issues)
 - 💡 **Discussions**: Share ideas on [GitHub Discussions](https://github.com/aryanshrai03/OpraMeet/discussions)
