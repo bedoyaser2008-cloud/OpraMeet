@@ -80,8 +80,8 @@ export async function GET(request: Request) {
       );
     }
 
-    // Exclude passcodeHash from response for security
-    const { passcodeHash, ...metadata } = room;
+    // Exclude sensitive fields from the public response
+    const { passcodeHash, hostId, allowedMembers, ...metadata } = room;
 
     return NextResponse.json({ exists: true, ...metadata });
   } catch (error: any) {

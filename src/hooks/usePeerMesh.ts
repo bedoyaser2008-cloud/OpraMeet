@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { getPusherClient } from "@/websocket/client";
+import { getPusherClient, setAuthParams } from "@/websocket/client";
 import { buildRoomChannel } from "@/websocket/config";
 import { SIGNAL_EVENTS } from "@/websocket/events";
 import { ICE_SERVERS } from "@/lib/constants";
@@ -165,12 +165,15 @@ export function usePeerMesh(
       return;
     }
 
-    pusher.config.auth = pusher.config.auth || {};
-    pusher.config.auth.params = {
+    // Set auth params that will be sent with the channel subscription auth request
+    const authParams: Record<string, string> = {
       user_id: userId,
       user_name: displayName,
-      token: hostSecretOrToken || undefined,
     };
+    if (hostSecretOrToken) {
+      authParams.token = hostSecretOrToken;
+    }
+    setAuthParams(authParams);
 
     const channelName = buildRoomChannel(roomId);
     const channel = pusher.subscribe(channelName);
@@ -251,7 +254,7 @@ export function usePeerMesh(
         destroyPeerConnection(peerId);
       });
     };
-  }, [roomId, localStream, userId, displayName, isHost, createPeer, destroyPeerConnection]);
+  }, [roomId, localStream, userId, displayName, isHost, hostSecretOrToken, createPeer, destroyPeerConnection]);
 
   // Sync tracks when localStream changes (e.g. mic mute/unmute, screen share toggled)
   useEffect(() => {

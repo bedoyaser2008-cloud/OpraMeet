@@ -8,7 +8,7 @@ import { PinEntry } from "@/components/lobby/PinEntry";
 import { LobbyPreview } from "@/components/lobby/LobbyPreview";
 import { WaitingRoom } from "@/components/meeting/WaitingRoom";
 import { MeetingRoom } from "./MeetingRoom";
-import { getPusherClient } from "@/websocket/client";
+import { getPusherClient, setAuthParams } from "@/websocket/client";
 import { buildRoomChannel } from "@/websocket/config";
 import { hashPasscode } from "@/lib/crypto-client";
 
@@ -117,14 +117,16 @@ function RoomGateContent({
       return;
     }
 
-    // Set configuration variables for Pusher subscription auth
-    pusher.config.auth = pusher.config.auth || {};
-    pusher.config.auth.params = {
+    // Set auth params for the waiting room subscription
+    const waitingAuthParams: Record<string, string> = {
       user_id: activeUserId,
       user_name: displayName,
       is_waiting: "true",
-      token: hostSecret || undefined, // Host uses secret, guest uses undefined when waiting
     };
+    if (hostSecret) {
+      waitingAuthParams.token = hostSecret;
+    }
+    setAuthParams(waitingAuthParams);
 
     const channelName = buildRoomChannel(roomId);
     const channel = pusher.subscribe(channelName);

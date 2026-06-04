@@ -52,9 +52,7 @@ export function ParticipantsSidebar({
 }: ParticipantsSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  if (!isOpen) return null;
-
-  // Build full list including local user
+  // Build full list including local user — hooks MUST be called unconditionally (before any returns)
   const allParticipants = useMemo(() => {
     const list: Participant[] = [
       {
@@ -92,6 +90,8 @@ export function ParticipantsSidebar({
   const filteredParticipants = allParticipants.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (!isOpen) return null;
 
   return (
     <motion.div
