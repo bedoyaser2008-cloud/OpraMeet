@@ -1,0 +1,14 @@
+{
+  "site_url": "https://oprameet.vercel.app",
+  "app_name": "OpraMeet",
+  "fallback_url": "https://oprameet.vercel.app/offline",
+  "dev_url": "http://10.0.2.2:3000",
+  "use_dev_url": false,
+  "allow_back_navigation": true,
+  "show_loading_screen": true,
+  "loading_timeout_ms": 8000,
+  "enable_picture_in_picture": true,
+  "enable_deep_links": true,
+  "deep_link_scheme": "oprameet",
+  "deep_link_host": "oprameet.vercel.app"
+}

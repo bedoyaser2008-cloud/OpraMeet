@@ -19,3 +19,11 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# Keep WebView JavaScript interface methods if the web app adds one later.
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+-keep class com.aryanshrai3.oprameet.AppConfig { *; }
+-keep class com.aryanshrai3.oprameet.ConfigLoader { *; }
+-keepclassmembers class android.webkit.** { *; }

@@ -45,3 +45,63 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+
+# Built outputs
+build/
+app/build/
+*.apk
+*.aab
+*.ap_
+
+# Gradle
+.gradle/
+gradle.properties.local
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Local config (contains your PC's SDK path — never commit)
+local.properties
+
+# Signing keys (security)
+*.keystore
+*.jks
+*.p12
+
+# Native builds
+.externalNativeBuild/
+.cxx/
+
+# Kotlin
+.kotlin/
+
+# Test results
+captures/
+reports/
+test-results/
+
+# Mapping files
+mapping/
+
+# Logs
+logs/
+
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
